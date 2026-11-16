@@ -13,6 +13,8 @@ const PORT = process.env.PORT || 3000;
 const SIGN_KEY = process.env.EULER_API_KEY || undefined; // isteğe bağlı, ücretsiz anahtar
 const PAGE = fs.readFileSync(path.join(__dirname, 'public', 'index.html'));
 const SESLER = fs.readFileSync(path.join(__dirname, 'public', 'sesler.js'));
+const ICON = fs.readFileSync(path.join(__dirname, 'public', 'icon.png'));
+const MANIFEST = JSON.stringify({ name: 'Zikir Halkası', short_name: 'Zikir Halkası', start_url: '/oyun?canli', display: 'fullscreen', orientation: 'portrait', background_color: '#000000', theme_color: '#000000', icons: [{ src: '/icon.png', sizes: '512x512', type: 'image/png' }] });
 
 const server = http.createServer((req, res) => {
   if (req.url === '/') { res.writeHead(302, { Location: '/oyun?canli' }); return res.end(); }
@@ -24,6 +26,8 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'max-age=86400' });
     return res.end(SESLER);
   }
+  if (req.url === '/icon.png') { res.writeHead(200, { 'Content-Type': 'image/png' }); return res.end(ICON); }
+  if (req.url === '/manifest.json') { res.writeHead(200, { 'Content-Type': 'application/manifest+json' }); return res.end(MANIFEST); }
   if (req.url === '/saglik') { res.writeHead(200); return res.end('ok'); }
   res.writeHead(404); res.end();
 });
