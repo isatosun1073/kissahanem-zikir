@@ -12,22 +12,145 @@
 <link rel="apple-touch-icon" href="/icon.png">
 <title>Kıssahanem Zikir Halkası</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
-  html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:'Noto Serif',Georgia,serif;-webkit-user-select:none;user-select:none}
-  #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
-  canvas{display:block}
-  #start{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(3,5,20,.86);color:#f4e2b0;text-align:center;padding:24px;z-index:5}
+  :root{--gold:#e9c46a;--gold2:#ffe7a8;--ink:#0a0d24}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:'Noto Serif',Georgia,serif;-webkit-user-select:none;user-select:none;color:#fff}
+  #stage{position:fixed;left:50%;top:50%;width:720px;height:1280px;transform-origin:center;overflow:hidden;background:#02030c}
+  #gl{position:absolute;inset:0;width:720px;height:1280px;display:block}
+  .glass{background:linear-gradient(180deg,rgba(28,18,48,.78),rgba(10,12,36,.78));border:1.5px solid rgba(233,196,106,.75);box-shadow:0 0 24px rgba(233,196,106,.18),inset 0 0 0 4px rgba(233,196,106,.08);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+
+  /* üst başlık */
+  #hud{position:absolute;left:22px;right:22px;top:24px;border-radius:22px;padding:10px 16px 12px;text-align:center}
+  #hud .ar{font-family:Amiri,serif;font-size:24px;color:var(--gold);line-height:1.1;text-shadow:0 0 12px rgba(233,196,106,.5)}
+  #hud h1{margin:2px 0 0;font-size:36px;color:var(--gold2);letter-spacing:.5px;text-shadow:0 2px 10px rgba(255,190,90,.45)}
+  #hud .brand{font-size:14px;color:var(--gold);opacity:.85;margin-top:-2px}
+  #hud .rules{display:flex;justify-content:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+  .chip{font-size:15px;font-weight:700;padding:5px 11px;border-radius:999px;background:rgba(233,196,106,.14);border:1px solid rgba(233,196,106,.5);color:#fff;white-space:nowrap}
+  .chip b{color:var(--gold2)}
+
+  /* hoş geldin */
+  #welcome{position:absolute;left:22px;right:22px;top:212px;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+  .wcard{display:flex;align-items:center;gap:14px;padding:9px 18px 9px 9px;border-radius:999px;animation:win .55s cubic-bezier(.2,1.4,.4,1) both;background:linear-gradient(90deg,rgba(92,40,120,.95),rgba(24,30,90,.92));border:1.5px solid var(--gold);box-shadow:0 0 30px rgba(180,120,255,.35)}
+  .wcard.out{animation:wout .45s ease-in both}
+  @keyframes win{from{transform:translateX(-120%) scale(.8);opacity:0}to{transform:none;opacity:1}}
+  @keyframes wout{to{transform:translateX(110%);opacity:0}}
+  .wcard .t1{font-size:24px;font-weight:700;color:var(--gold2);line-height:1.15}
+  .wcard .t2{font-size:15px;color:#e8e4ff}
+  .av{flex:none;border-radius:50%;border:3px solid var(--gold);background:#3a2a5a center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--gold2);overflow:hidden}
+  .av img{width:100%;height:100%;object-fit:cover;display:block}
+  .wcard .av{width:62px;height:62px;font-size:28px;box-shadow:0 0 18px rgba(233,196,106,.6)}
+
+  /* isim etiketleri */
+  #labels{position:absolute;inset:0;pointer-events:none;z-index:1;isolation:isolate}
+  #hud,#welcome,#near,#feed,#dua,#sub,#bottom,#status,#veil{z-index:2}
+  #dua{z-index:4} #veil{z-index:3}
+  .lbl{position:absolute;left:0;top:0;display:flex;align-items:center;gap:5px;padding:2px 8px 2px 2px;border-radius:999px;background:rgba(6,8,26,.72);border:1px solid rgba(255,255,255,.25);white-space:nowrap;transform-origin:50% 100%;will-change:transform}
+  .lbl .av{width:22px;height:22px;font-size:11px;border-width:1.5px}
+  .lbl .n{font-size:13px;font-weight:700;color:#fff;max-width:120px;overflow:hidden;text-overflow:ellipsis}
+  .lbl .tm{font:700 11px system-ui;color:#9fe0a8;background:rgba(0,0,0,.35);padding:1px 5px;border-radius:6px}
+  .lbl.gift{background:linear-gradient(90deg,rgba(130,86,14,.92),rgba(80,50,8,.92));border-color:var(--gold);box-shadow:0 0 12px rgba(233,196,106,.5)}
+  .lbl.gift .n{color:var(--gold2)} .lbl.gift .tm{color:#ffd27a}
+  .lbl.low{animation:low .5s infinite alternate}
+  .lbl.low .tm{color:#ff8a7a}
+  @keyframes low{to{border-color:#ff5a4a;box-shadow:0 0 14px #ff5a4a}}
+  .lbl.kandil{background:rgba(40,20,0,.75);border-color:var(--gold)} .lbl.kandil .n{color:var(--gold2);font-size:13px}
+
+  /* halkaya yaklaşanlar */
+  #near{position:absolute;right:18px;top:300px;width:230px;border-radius:16px;padding:10px 12px;display:none}
+  #near h3{margin:0 0 6px;font-size:14px;color:var(--gold)}
+  .nr{display:flex;align-items:center;gap:8px;margin:6px 0}
+  .nr .av{width:30px;height:30px;font-size:14px;border-width:2px}
+  .nr .info{flex:1;min-width:0}
+  .nr .nm{font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bar{height:7px;border-radius:5px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:3px}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,#ff5a7a,#ffb3c6);border-radius:5px;transition:width .3s}
+  .nr .ct{font:700 11px system-ui;color:#ffb3c6}
+
+  /* olay akışı */
+  #feed{position:absolute;left:18px;bottom:212px;width:470px;display:flex;flex-direction:column-reverse;gap:6px;pointer-events:none}
+  .ev{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;border-radius:999px;background:rgba(60,34,8,.86);border:1px solid rgba(233,196,106,.7);font-size:16px;font-weight:700;color:var(--gold2);animation:evin .35s ease-out both;max-width:100%}
+  .ev .av{width:28px;height:28px;font-size:13px;border-width:1.5px}
+  .ev span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ev.warn{background:rgba(90,14,14,.88);border-color:#ff7a6a;color:#ffd6d0}
+  .ev.like{background:rgba(90,20,50,.86);border-color:#ff8aaa;color:#ffe0ea}
+  .ev.out{animation:evout .4s ease-in both}
+  @keyframes evin{from{transform:translateX(-40px);opacity:0}}
+  @keyframes evout{to{opacity:0;transform:translateY(10px)}}
+
+  /* dua kartı */
+  #dua{position:absolute;left:36px;right:36px;top:330px;border-radius:26px;padding:22px 26px 24px;text-align:center;display:none}
+  #dua.show{display:block;animation:dIn .6s cubic-bezier(.2,1.3,.4,1) both}
+  #dua.hide{animation:dOut .5s ease-in both}
+  @keyframes dIn{from{transform:scale(.6) translateY(40px);opacity:0}}
+  @keyframes dOut{to{transform:scale(.9);opacity:0}}
+  #dua .av{width:96px;height:96px;font-size:40px;margin:-70px auto 8px;box-shadow:0 0 40px rgba(255,210,120,.8)}
+  #dua .gift{font-size:17px;color:var(--gold);font-weight:700}
+  #dua .name{font-size:46px;font-weight:700;color:var(--gold2);text-shadow:0 0 22px rgba(255,184,74,.9);line-height:1.15;margin:4px 0 8px;word-break:break-word}
+  #dua .text{font-size:25px;line-height:1.4}
+  #dua .time{display:inline-block;margin-top:12px;font:700 16px system-ui;color:#9fe0a8;background:rgba(0,0,0,.35);padding:5px 12px;border-radius:999px}
+  #dua.big{top:300px;background:linear-gradient(180deg,rgba(60,30,100,.92),rgba(20,10,40,.92))}
+  #dua.big .name{font-size:58px}
+  #dua.ayet .text{font-style:italic;font-size:28px}
+  #dua .ref{margin-top:10px;color:var(--gold);font-weight:700}
+  #veil{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,rgba(255,220,150,.10),rgba(0,0,8,.6));opacity:0;transition:opacity .6s;pointer-events:none}
+  #veil.on{opacity:1}
+
+  /* altyazı (konuşma) */
+  #sub{position:absolute;left:40px;right:40px;bottom:218px;text-align:center;font-size:21px;font-style:italic;line-height:1.35;color:#fff;text-shadow:0 2px 6px #000,0 0 12px #000;opacity:0;transition:opacity .3s;pointer-events:none}
+  #sub.on{opacity:1}
+  #sub b{color:var(--gold2);font-style:normal}
+
+  /* alt panel */
+  #bottom{position:absolute;left:22px;right:22px;bottom:22px;border-radius:20px;padding:12px 18px 14px}
+  #bottom .row{display:flex;justify-content:space-between;align-items:baseline;font-size:19px;font-weight:700}
+  #bottom .row .r{font-size:15px;color:#ffb3c6}
+  #prog{height:16px;border-radius:9px;background:rgba(255,255,255,.1);overflow:hidden;margin:8px 0 10px}
+  #prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#b8862e,#ffe7a8);border-radius:9px;transition:width .4s;box-shadow:0 0 12px rgba(255,220,140,.7)}
+  #info{font-size:15.5px;text-align:center;min-height:44px;transition:opacity .4s;line-height:1.45}
+  #info b{color:var(--gold2)}
+
+  #status{position:absolute;left:50%;top:200px;transform:translateX(-50%);font:600 14px system-ui;color:#9fe0a8;background:rgba(0,0,0,.7);padding:4px 12px;border-radius:10px;opacity:0;transition:opacity .5s;white-space:nowrap}
+  #status.on{opacity:1}
+
+  #start{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(3,5,20,.9);color:#f4e2b0;text-align:center;padding:24px;z-index:5}
   #start h1{margin:0;font-size:28px}
   #start p{margin:0;color:#cfc3a0;font-size:15px;max-width:420px;line-height:1.5}
   #start button{background:linear-gradient(#e9c46a,#b8862e);color:#1a1006;border:0;border-radius:14px;padding:14px 30px;font:700 19px 'Noto Serif',serif;cursor:pointer}
-  #test{position:fixed;left:50%;bottom:8px;transform:translateX(-50%);display:none;flex-wrap:wrap;justify-content:center;gap:6px;max-width:96vw;z-index:4;background:rgba(0,0,0,.6);padding:8px;border-radius:12px}
-  #test button{background:#1d2340;color:#f4e2b0;border:1px solid #c9a54a;border-radius:8px;padding:6px 9px;font:600 12px system-ui;cursor:pointer}
+  #test{position:fixed;left:50%;bottom:8px;transform:translateX(-50%);display:none;flex-wrap:wrap;justify-content:center;gap:5px;max-width:96vw;z-index:4;background:rgba(0,0,0,.65);padding:6px;border-radius:12px}
+  #test button{background:#1d2340;color:#f4e2b0;border:1px solid #c9a54a;border-radius:8px;padding:5px 8px;font:600 11px system-ui;cursor:pointer}
   #test button.on{background:#c9a54a;color:#111}
 </style>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
 </head>
 <body>
-<div id="wrap"><canvas id="c"></canvas></div>
+<div id="stage">
+  <canvas id="gl" width="720" height="1280"></canvas>
+  <div id="labels"></div>
+  <div id="veil"></div>
+  <div id="hud" class="glass">
+    <div class="ar">أَلَا بِذِكْرِ اللّٰهِ تَطْمَئِنُّ الْقُلُوبُ</div>
+    <h1>Zikir Halkası</h1>
+    <div class="brand">— Kıssahanem —</div>
+    <div class="rules">
+      <span class="chip">❤ <b>100 beğeni</b> → halkaya otur</span>
+      <span class="chip">✍️ <b>SUBHANALLAH</b> yaz</span>
+      <span class="chip">🎁 Hediye → <b>daha uzun kal + dua</b></span>
+    </div>
+  </div>
+  <div id="status"></div>
+  <div id="welcome"></div>
+  <div id="near" class="glass"><h3>❤ Halkaya yaklaşanlar</h3><div id="nearList"></div></div>
+  <div id="feed"></div>
+  <div id="sub"></div>
+  <div id="dua" class="glass"></div>
+  <div id="bottom" class="glass">
+    <div class="row"><span id="zc">0 zikir</span><span class="r" id="lc">❤ 0 beğeni</span></div>
+    <div id="prog"><i></i></div>
+    <div id="info"></div>
+  </div>
+</div>
 
 <div id="start">
   <h1>🤲 Zikir Halkası</h1>
@@ -36,773 +159,21 @@
 </div>
 
 <div id="test">
-  <button data-a="join">👋 Yayına giriş</button>
-  <button data-a="zikir">Zikir yaz</button>
-  <button data-a="like">Beğeni ×100</button>
-  <button data-c="1">🌹 1 jeton</button>
+  <button data-a="join">👋 Giriş</button>
+  <button data-a="like">❤ ×40</button>
+  <button data-a="zikir">Zikir</button>
+  <button data-c="1">🌹 1</button>
   <button data-c="10">🫰 10</button>
   <button data-c="100">🤲 100</button>
   <button data-c="500">🌙 500</button>
   <button data-c="1000">🌌 1000</button>
   <button data-c="5000">🦁 5000</button>
-  <button data-a="dua">🔊 Sesli dua</button>
-  <button data-a="demo" id="demoBtn">Otomatik demo</button>
+  <button data-a="dua">🔊 Dua</button>
+  <button data-a="demo" id="demoBtn">Demo</button>
   <button data-a="hide">Gizle</button>
 </div>
 
 <script src="sesler.js"></script>
-<script>
-// ================== AYARLAR ==================
-const W = 720, H = 1280;
-const PARAMS = new URLSearchParams(location.search);
-const LIVE = PARAMS.has('canli');
-
-// Jetona göre olay seviyeleri
-// sure: halkada kalma süresi (saniye). Infinity = yayın sonuna kadar
-const TIERS = [
-  { min: 5000, lvl: 6, zikir: 3333, dur: 13, sure: Infinity, etiket: 'yayın sonuna kadar' },
-  { min: 1000, lvl: 5, zikir: 1000, dur: 10, sure: 3 * 3600, etiket: '+3 saat' },
-  { min: 500,  lvl: 4, zikir: 333,  dur: 8,  sure: 3600, etiket: '+1 saat' },
-  { min: 100,  lvl: 3, zikir: 99,   dur: 7,  sure: 1800, etiket: '+30 dk' },
-  { min: 10,   lvl: 2, zikir: 33,   dur: 5.5, sure: 600, etiket: '+10 dk' },
-  { min: 1,    lvl: 1, zikir: 10,   dur: 4,  sure: 180, etiket: '+3 dk' },
-];
-// Ücretsiz katılım
-const BEGENI_GIRIS = 100;      // halkaya girmek için gereken beğeni
-const SURE_GIRIS = 120;        // 100 beğeniyle giriş: 2 dk
-const SURE_BEGENI = 60;        // halkadayken her 100 beğeni: +1 dk
-const SURE_ZIKIR_GIRIS = 60;   // zikir yazarak giriş: 1 dk
-const SURE_ZIKIR = 20;         // halkadayken her zikir yorumu: +20 sn
-const UYARI_SN = 15;           // süre bitmeden uyarı
-const DUA_SMALL = ['Allah razı olsun', 'Rabbim kabul etsin', 'Hayırlara vesile olsun', 'Allah bereket versin', 'Rabbim gönlünü ferah etsin'];
-const DUA_BIG = [
-  'Rabbim gönlüne huzur, evine bereket versin',
-  'Allah seni ve aileni her türlü kötülükten korusun',
-  'Rabbim dualarını kabul etsin, hayırlı muradına erdirsin',
-  'Allah sağlık, sıhhat ve helal rızık versin',
-  'Rabbim kalbini imanla, yüzünü nurla doldursun',
-  'Allah sevdiklerinle birlikte cennetinde buluştursun',
-  'Rabbim yolunu açık, işlerini kolay eylesin',
-];
-const DUA_HUGE = [
-  'Rabbim bu güzelliğini kat kat mükâfatlandırsın; seni, aileni ve sevdiklerini dünyada ve ahirette mutlu etsin.',
-  'Allah ömrünü hayırlı, rızkını bol, kalbini huzurlu eylesin; duanı arşa ulaştırsın.',
-];
-const AYETLER = [
-  ['Bilesiniz ki kalpler ancak Allah\'ı anmakla huzur bulur.', 'Ra\'d Suresi, 28'],
-  ['Siz beni anın ki ben de sizi anayım.', 'Bakara Suresi, 152'],
-  ['Bana dua edin, size icabet edeyim.', 'Mü\'min Suresi, 60'],
-  ['Allah\'ı çokça anın ki kurtuluşa eresiniz.', 'Cuma Suresi, 10'],
-  ['Kullarım beni sana sorarsa, ben çok yakınım.', 'Bakara Suresi, 186'],
-];
-const ZIKIRLER = [
-  [/S[UÜ]BHANALLAH|SUBHANALLAH|SÜPHANALLAH|SUPHANALLAH/, 'Subhanallah'],
-  [/ELHAMD[UÜ]L[İI]LLAH/, 'Elhamdülillah'],
-  [/ALLAHU?EKBER|ALLAHÜEKBER/, 'Allahu Ekber'],
-  [/LA[İI]LAHE[İI]LLALLAH|LAİLAHEİLLALLAH/, 'Lâ ilâhe illallah'],
-  [/ESTA[ĞG]F[İI]RULLAH/, 'Estağfirullah'],
-  [/MA[ŞS]ALLAH/, 'Maşallah'],
-  [/ALLAHÜMMESALL[İI]|SALAVAT/, 'Salavat'],
-  [/^AM[İI]N$|AM[İI]N/, 'Âmin'],
-];
-const GOALS = [33, 99, 333, 1000, 3333, 10000, 33333, 100000];
-
-// ================== TUVAL ==================
-const cv = document.getElementById('c'), c = cv.getContext('2d');
-cv.width = W; cv.height = H;
-function fit() { const w = Math.min(innerWidth, innerHeight * 9 / 16); cv.style.width = w + 'px'; cv.style.height = (w * 16 / 9) + 'px'; }
-addEventListener('resize', fit); fit();
-
-const rnd = a => a[Math.floor(Math.random() * a.length)];
-const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-function rr(x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
-function shade(hex, a) { const n = parseInt(hex.slice(1), 16); const f = v => clamp(v + a, 0, 255); return `rgb(${f(n >> 16)},${f(n >> 8 & 255)},${f(n & 255)})`; }
-function wrap(text, maxW) { const words = text.split(' '); const lines = []; let cur = ''; for (const w of words) { const t = cur ? cur + ' ' + w : w; if (c.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; } if (cur) lines.push(cur); return lines; }
-function cut(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
-
-// ================== DURUM ==================
-const ROBES = ['#2a2f55', '#3a2a4a', '#1f3a3a', '#4a3a2a', '#e8e0c8', '#2a4a6a', '#5a2a2a', '#2f4a2f', '#6a5a8a', '#f2ecdc'];
-const HIJABS = ['#e9e4f0', '#3a3f6a', '#6a2a3a', '#2a5a5a', '#c9b48a', '#f4efe6', '#4a2a5a'];
-const SKINS = ['#e8b994', '#d9a57c', '#b67d55', '#f1c9a5', '#9a6a48'];
-let people = [], byId = {}, seq = 0;
-let count = 0, likeAcc = 0, beadRot = 0, beadBoost = 0, beadName = null, beadNameT = 0;
-let floats = [], petals = [], nurRain = [], shooting = [], toasts = [], duaQ = [], dua = null;
-let handsUp = 0, skyOpen = 0, nurFlash = 0, standUp = 0, totals = {}, sultan = null, goalIdx = 0;
-let connStatus = LIVE ? 'Sunucuya bağlanıyor…' : 'Önizleme modu', connT = 6;
-const kandils = [0, 1, 2, 3, 4].map(i => ({ x: W * (.1 + i * .2), len: 40 + (i % 2) * 34, name: null, lit: 0, ph: i * 1.3 }));
-const stars = Array.from({ length: 140 }, () => ({ x: Math.random() * W, y: Math.random() * H * .5, r: Math.random() * 1.7 + .3, p: Math.random() * 6 }));
-
-// izleyiciler: yayına girenler (halkada olsun olmasın)
-const visitors = {};
-const imgCache = {};
-function avatarImg(url) {
-  if (!url) return null;
-  if (!imgCache[url]) { const im = new Image(); im.referrerPolicy = 'no-referrer'; im.src = url; imgCache[url] = im; }
-  const im = imgCache[url]; return im.complete && im.naturalWidth ? im : null;
-}
-function visitor(id, name, avatar) {
-  let v = visitors[id];
-  if (!v) v = visitors[id] = { id, name: name || id, avatar: avatar || '', likes: 0, likeToast: 0 };
-  if (name) v.name = name; if (avatar) { v.avatar = avatar; avatarImg(avatar); }
-  return v;
-}
-function drawAvatar(url, name, x, y, r) {
-  c.save(); c.beginPath(); c.arc(x, y, r, 0, 7); c.closePath();
-  c.fillStyle = '#3a2a5a'; c.fill(); c.clip();
-  const im = avatarImg(url);
-  if (im) c.drawImage(im, x - r, y - r, r * 2, r * 2);
-  else { c.fillStyle = '#ffe7a8'; c.font = `700 ${Math.round(r)}px "Noto Serif"`; c.textAlign = 'center'; c.fillText(String(name || '?').trim().charAt(0).toLocaleUpperCase('tr-TR'), x, y + r * .36); }
-  c.restore(); c.strokeStyle = '#e9c46a'; c.lineWidth = 2.5; c.beginPath(); c.arc(x, y, r, 0, 7); c.stroke();
-}
-const nowMs = () => performance.now();
-function getPerson(id, name, avatar, npc) {
-  let p = byId[id];
-  if (p) { if (name) p.name = name; if (avatar) p.avatar = avatar; p.last = nowMs(); return p; }
-  const female = Math.random() < .4;
-  p = { id, name: name || id, avatar: avatar || '', npc: !!npc, female, robe: rnd(ROBES), hijab: rnd(HIJABS), skin: rnd(SKINS), sarik: Math.random() < .5, beard: Math.random() < .6,
-        ph: Math.random() * 6, nur: 0, talk: 0, gift: 0, seq: seq++, last: nowMs(), until: npc ? Infinity : nowMs(), warned: false, leaving: -1,
-        x: W / 2 + (Math.random() - .5) * 300, y: H + 80, s: 1.2 };
-  byId[id] = p; people.push(p); trim(p); return p;
-}
-function remaining(p) { return p.until === Infinity ? Infinity : (p.until - nowMs()) / 1000; }
-// Halkaya al ya da süresini uzat. Döner: true = yeni girdi
-function sitOrExtend(id, name, avatar, sec, why) {
-  const isNew = !byId[id] || byId[id].leaving >= 0;
-  if (byId[id] && byId[id].leaving >= 0) removePerson(byId[id]);
-  const p = getPerson(id, name, avatar);
-  if (sec === Infinity) p.until = Infinity;
-  else if (p.until !== Infinity) p.until = Math.max(nowMs(), p.until) + sec * 1000;
-  p.warned = false;
-  if (isNew) { p.talk = 2; toast(`🕌 ${cut(p.name, 16)} halkaya katıldı ${why ? '• ' + why : ''}`); sfx.zikir(); }
-  return p;
-}
-function removePerson(p) { const i = people.indexOf(p); if (i >= 0) people.splice(i, 1); if (byId[p.id] === p) delete byId[p.id]; }
-function trim(keep) {
-  const MAX = 42;
-  while (people.length > MAX) {
-    const pool = people.filter(p => p !== keep && (p.npc || (p.gift === 0 && p.until !== Infinity)));
-    const list = pool.length ? pool : people.filter(p => p !== keep);
-    const out = list.find(p => p.npc) || list.reduce((a, b) => remaining(a) < remaining(b) ? a : b);
-    removePerson(out);
-  }
-}
-function updateSeats(dt) {
-  const n = nowMs();
-  people.slice().forEach(p => {
-    if (p.npc) return;
-    if (p.leaving >= 0) { p.leaving += dt; if (p.leaving > 1.6) removePerson(p); return; }
-    const r = remaining(p);
-    if (r < UYARI_SN && !p.warned) { p.warned = true; toast(`⏳ ${cut(p.name, 14)}, süren bitiyor! ❤ beğeni ya da 🎁 ile kal`); }
-    if (r <= 0) { p.leaving = 0; toast(`👋 ${cut(p.name, 14)} halkadan kalktı`); }
-  });
-  // halkada en az birkaç cemaat olsun (isimsiz)
-  const real = people.filter(p => !p.npc && p.leaving < 0).length, npcs = people.filter(p => p.npc);
-  const want = Math.max(0, 6 - real);
-  if (npcs.length < want) getPerson('npc' + seq, '', '', true);
-  else if (npcs.length > want) removePerson(npcs[0]);
-}
-let welcomes = [], welcome = null;
-function onJoin(id, name, avatar) {
-  const v = visitor(id, name, avatar);
-  welcomes.push({ name: v.name, avatar: v.avatar, inRing: !!byId[id], t: 0 });
-  if (welcomes.length > 6) welcomes.splice(0, welcomes.length - 6);
-}
-function drawWelcome(dt) {
-  if (!welcome && welcomes.length) { welcome = welcomes.shift(); welcome.dur = welcomes.length > 2 ? 1.6 : 3; }
-  if (!welcome) return;
-  welcome.t += dt; if (welcome.t > welcome.dur) { welcome = null; return; }
-  const a = clamp(Math.min(welcome.t * 5, (welcome.dur - welcome.t) * 4), 0, 1), y = 176, x = 40 + (1 - a) * -60;
-  c.globalAlpha = a;
-  const g = c.createLinearGradient(x, 0, x + W - 80, 0); g.addColorStop(0, 'rgba(60,30,90,.95)'); g.addColorStop(1, 'rgba(20,24,70,.92)');
-  c.fillStyle = g; rr(x, y, W - 80, 74, 37); c.fill(); c.strokeStyle = '#e9c46a'; c.lineWidth = 1.5; c.stroke();
-  drawAvatar(welcome.avatar, welcome.name, x + 37, y + 37, 28);
-  c.textAlign = 'left'; c.fillStyle = '#ffe7a8'; c.font = '700 23px "Noto Serif"';
-  c.fillText(`Hoş geldin, ${cut(welcome.name, 16)} 🤍`, x + 78, y + 32);
-  c.fillStyle = '#fff'; c.font = '400 16px "Noto Serif"';
-  c.fillText(welcome.inRing ? 'Halkada yerin hazır, zikre devam!' : `❤ ${BEGENI_GIRIS} beğeni gönder, halkaya otur`, x + 78, y + 56);
-  c.globalAlpha = 1;
-}
-
-// ================== OLAYLAR ==================
-function onChat(id, name, text, avatar) {
-  visitor(id, name, avatar);
-  const t = String(text || '').toLocaleUpperCase('tr-TR').replace(/[^A-ZÇĞİÖŞÜÂÎÛ]/g, '');
-  if (t === 'KADIN' || t === 'KIZ' || t === 'ERKEK') {
-    const p = byId[id]; if (p) { p.female = t !== 'ERKEK'; p.talk = 1.5; }
-    else toast(`${cut(name, 14)}: önce halkaya gir (❤ ${BEGENI_GIRIS} beğeni)`);
-    return;
-  }
-  const z = ZIKIRLER.find(([re]) => re.test(t));
-  if (!z) return;
-  const inRing = byId[id] && byId[id].leaving < 0;
-  const p = inRing ? byId[id] : sitOrExtend(id, name, avatar, SURE_ZIKIR_GIRIS, '1 dk');
-  if (inRing && p.until !== Infinity) p.until = Math.max(nowMs(), p.until) + SURE_ZIKIR * 1000, p.warned = false;
-  p.talk = 2; floats.push({ p, txt: z[1], t: 0 });
-  addCount(1); sfx.zikir();
-}
-function onLike(id, name, n, avatar) {
-  likeAcc += n;
-  while (likeAcc >= 100) { likeAcc -= 100; beadBoost = Math.max(beadBoost, .4); addCount(1); }
-  const v = visitor(id, name, avatar); v.likes += n;
-  const inRing = byId[id] && byId[id].leaving < 0;
-  if (v.likes >= BEGENI_GIRIS) {
-    v.likes -= BEGENI_GIRIS;
-    if (!inRing) sitOrExtend(id, name, avatar, SURE_GIRIS, '❤ 2 dk');
-    else { const p = byId[id]; if (p.until !== Infinity) { p.until = Math.max(nowMs(), p.until) + SURE_BEGENI * 1000; p.warned = false; } p.talk = 1; floats.push({ p, txt: '❤ +1 dk', t: 0 }); }
-    v.likes = Math.min(v.likes, BEGENI_GIRIS - 1);
-  } else if (!inRing && nowMs() - v.likeToast > 5000) {
-    v.likeToast = nowMs(); toast(`❤ ${cut(v.name, 14)}: ${v.likes}/${BEGENI_GIRIS} beğeni — halkaya az kaldı`);
-  }
-}
-function onFollow(id, name) { toast(`💚 ${cut(name, 18)} takip etti — Allah razı olsun`); }
-
-function onGift(id, name, coins, giftName, avatar) {
-  coins = Math.max(1, Math.round(coins || 1));
-  const T = TIERS.find(t => coins >= t.min);
-  visitor(id, name, avatar);
-  const p = sitOrExtend(id, name, avatar, T.sure, '🎁 ' + T.etiket);
-  floats.push({ p, txt: '⏳ ' + T.etiket, t: 0 });
-  p.gift += coins; p.nur = Math.max(p.nur, 4 + T.lvl); p.talk = 2;
-  totals[id] = { name: p.name, coins: (totals[id]?.coins || 0) + coins };
-  sfx.gift(T.lvl);
-
-  if (T.lvl === 1) { toast(`🤲 ${cut(p.name, 16)}: ${rnd(DUA_SMALL)} (+3 dk)`); addCount(T.zikir); return; }
-  if (T.lvl >= 2) { beadBoost = 1; beadName = p.name; beadNameT = 4; }
-  if (T.lvl >= 3) { lightKandil(p.name); for (let i = 0; i < 70; i++) petals.push({ x: Math.random() * W, y: -Math.random() * 400, v: 1 + Math.random() * 2, a: Math.random() * 6, s: .7 + Math.random() * .7 }); }
-  if (T.lvl >= 4) { skyOpen = T.dur; for (let i = 0; i < 4; i++) shooting.push(newShooting(i * .5)); }
-  if (T.lvl >= 5) { for (let i = 0; i < 160; i++) nurRain.push({ x: Math.random() * W, y: -Math.random() * H, v: 1.5 + Math.random() * 2.5, r: 1 + Math.random() * 2.5 }); nurFlash = 1; }
-  if (T.lvl >= 6) { standUp = T.dur; const top = Object.values(totals).sort((a, b) => b.coins - a.coins)[0]; sultan = top ? top.name : p.name; }
-
-  const text = T.lvl >= 5 ? rnd(DUA_HUGE) : rnd(DUA_BIG);
-  duaQ.push({ kind: 'dua', name: p.name, avatar: p.avatar, gift: giftName || 'Hediye', coins, lvl: T.lvl, text, dur: T.dur, t: 0, etiket: T.etiket });
-  if (T.lvl >= 6) { const a = rnd(AYETLER); duaQ.push({ kind: 'ayet', text: a[0], ref: a[1], lvl: 6, dur: 7, t: 0 }); }
-  addCount(T.zikir);
-}
-function addCount(n) {
-  count += n;
-  while (goalIdx < GOALS.length && count >= GOALS[goalIdx]) {
-    const g = GOALS[goalIdx++]; const a = AYETLER[goalIdx % AYETLER.length];
-    nurFlash = Math.max(nurFlash, .8); sfx.gift(4);
-    duaQ.push({ kind: 'ayet', text: a[0], ref: a[1], goal: g, lvl: 4, dur: 7, t: 0 });
-  }
-}
-function lightKandil(name) {
-  const free = kandils.find(k => !k.name);
-  const target = free || kandils.reduce((a, b) => a.lit < b.lit ? a : b);
-  target.name = name; target.lit = performance.now(); target.flare = 1;
-}
-function toast(txt) { toasts.unshift({ txt, t: 0 }); if (toasts.length > 4) toasts.length = 4; }
-function newShooting(delay) { return { x: Math.random() * W * .8 + W * .2, y: Math.random() * H * .2, t: -delay, len: 120 + Math.random() * 120 }; }
-
-// ================== ÇİZİM ==================
-function drawSky(t, dt) {
-  const g = c.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, '#03061a'); g.addColorStop(.45, '#0c1438'); g.addColorStop(1, '#1a1430');
-  c.fillStyle = g; c.fillRect(0, 0, W, H);
-  const sk = clamp(skyOpen, 0, 1);
-  stars.forEach(s => { c.fillStyle = `rgba(255,248,225,${.35 + .35 * Math.sin(t * 1.6 + s.p) + sk * .3})`; c.beginPath(); c.arc(s.x, s.y, s.r * (1 + sk * .6), 0, 7); c.fill(); });
-  // hilal
-  const mx = W * .8, my = H * .2, mr = 34 + sk * 16;
-  const mg = c.createRadialGradient(mx, my, mr * .5, mx, my, mr * (3 + sk * 3));
-  mg.addColorStop(0, `rgba(255,225,150,${.35 + sk * .4})`); mg.addColorStop(1, 'rgba(255,225,150,0)');
-  c.fillStyle = mg; c.beginPath(); c.arc(mx, my, mr * (3 + sk * 3), 0, 7); c.fill();
-  c.fillStyle = '#f8dc95'; c.beginPath(); c.arc(mx, my, mr, 0, 7); c.fill();
-  c.fillStyle = '#0a1030'; c.beginPath(); c.arc(mx + mr * .38, my - mr * .16, mr * .9, 0, 7); c.fill();
-  // cami silueti
-  c.fillStyle = '#070a1c';
-  const by = H * .5;
-  c.beginPath(); c.moveTo(0, by + 40); c.lineTo(0, by + 10); c.lineTo(W * .22, by + 10);
-  c.arc(W * .32, by + 10, W * .1, Math.PI, 0); c.lineTo(W * .5, by + 10); c.arc(W * .5, by + 10, W * .14, Math.PI, 0);
-  c.lineTo(W * .68, by + 10); c.arc(W * .68, by + 10, W * .08, Math.PI, 0); c.lineTo(W, by + 10); c.lineTo(W, by + 40); c.fill();
-  [W * .14, W * .86].forEach(x => { c.fillRect(x - 7, by - 150, 14, 170); c.beginPath(); c.moveTo(x - 9, by - 150); c.lineTo(x, by - 195); c.lineTo(x + 9, by - 150); c.fill(); c.fillRect(x - 11, by - 95, 22, 6); });
-  c.fillStyle = 'rgba(255,200,110,.5)';
-  for (let i = 0; i < 6; i++) { const x = W * (.42 + i * .03); c.fillRect(x, by - 20, 6, 12); }
-  // zemin
-  const fg = c.createLinearGradient(0, by + 30, 0, H);
-  fg.addColorStop(0, '#120e22'); fg.addColorStop(1, '#2a1a2a');
-  c.fillStyle = fg; c.fillRect(0, by + 30, W, H);
-  // kayan yıldızlar
-  shooting = shooting.filter(s => s.t < 1.2);
-  shooting.forEach(s => { s.t += dt; if (s.t < 0) return; const k = s.t / 1.2, x = s.x - k * 400, y = s.y + k * 250;
-    const gr = c.createLinearGradient(x, y, x + s.len, y - s.len * .6); gr.addColorStop(0, `rgba(255,245,210,${1 - k})`); gr.addColorStop(1, 'rgba(255,245,210,0)');
-    c.strokeStyle = gr; c.lineWidth = 2.5; c.beginPath(); c.moveTo(x, y); c.lineTo(x + s.len, y - s.len * .6); c.stroke(); });
-  if (skyOpen > 0 && Math.random() < dt * 1.5) shooting.push(newShooting(0));
-}
-
-function drawCarpet(cx, cy, rx, ry, t) {
-  const glow = c.createRadialGradient(cx, cy, 10, cx, cy, rx * 1.9);
-  glow.addColorStop(0, 'rgba(255,200,110,.30)'); glow.addColorStop(1, 'rgba(255,200,110,0)');
-  c.fillStyle = glow; c.fillRect(0, cy - rx * 2, W, rx * 4);
-  c.fillStyle = '#5a1620'; c.beginPath(); c.ellipse(cx, cy, rx * 1.95, ry * 1.95, 0, 0, 7); c.fill();
-  c.strokeStyle = '#c9a54a'; c.lineWidth = 3; c.beginPath(); c.ellipse(cx, cy, rx * 1.85, ry * 1.85, 0, 0, 7); c.stroke();
-  c.strokeStyle = 'rgba(201,165,74,.5)'; c.lineWidth = 1.5; c.setLineDash([8, 6]);
-  c.beginPath(); c.ellipse(cx, cy, rx * 1.55, ry * 1.55, 0, 0, 7); c.stroke(); c.setLineDash([]);
-  c.fillStyle = '#7a2230'; c.beginPath(); c.ellipse(cx, cy, rx * .8, ry * .8, 0, 0, 7); c.fill();
-  c.strokeStyle = '#c9a54a'; c.lineWidth = 2; c.stroke();
-  for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; c.fillStyle = '#c9a54a'; c.beginPath(); c.arc(cx + Math.cos(a) * rx * 1.7, cy + Math.sin(a) * ry * 1.7, 3, 0, 7); c.fill(); }
-}
-
-function drawTesbih(cx, cy, rx, ry, dt) {
-  beadRot += dt * (.25 + beadBoost * 5); beadBoost = Math.max(0, beadBoost - dt * .5);
-  const R = rx * .55, Ry = ry * .55;
-  if (beadBoost > .05) { const g = c.createRadialGradient(cx, cy, 5, cx, cy, R * 1.8); g.addColorStop(0, `rgba(255,220,140,${beadBoost * .6})`); g.addColorStop(1, 'rgba(255,220,140,0)'); c.fillStyle = g; c.beginPath(); c.arc(cx, cy, R * 1.8, 0, 7); c.fill(); }
-  for (let i = 0; i < 33; i++) {
-    const a = i / 33 * Math.PI * 2 + beadRot, x = cx + Math.cos(a) * R, y = cy + Math.sin(a) * Ry;
-    const g = c.createRadialGradient(x - 2, y - 2, 1, x, y, 7);
-    g.addColorStop(0, i === 0 ? '#fff0b0' : '#b0703a'); g.addColorStop(1, i === 0 ? '#b8862e' : '#4a2410');
-    c.fillStyle = g; c.beginPath(); c.arc(x, y, i === 0 ? 9 : 6.5, 0, 7); c.fill();
-  }
-  c.fillStyle = '#c9a54a'; c.beginPath(); c.moveTo(cx - 6, cy + Ry); c.lineTo(cx + 6, cy + Ry); c.lineTo(cx, cy + Ry + 26); c.fill();
-  if (beadName && beadNameT > 0) {
-    beadNameT -= dt; c.globalAlpha = clamp(beadNameT, 0, 1);
-    c.font = '700 22px "Noto Serif"'; c.textAlign = 'center'; c.fillStyle = '#ffe7a8';
-    c.shadowColor = '#ffb84a'; c.shadowBlur = 14; c.fillText(cut(beadName, 18), cx, cy + 8); c.shadowBlur = 0; c.globalAlpha = 1;
-  }
-}
-
-function drawKandils(t, dt) {
-  const now = performance.now();
-  kandils.forEach(k => {
-    const sw = Math.sin(t * .9 + k.ph) * 4, top = 172, y = top + k.len, x = k.x + sw;
-    c.strokeStyle = '#7a6030'; c.lineWidth = 2; c.beginPath(); c.moveTo(k.x, top); c.lineTo(x, y - 18); c.stroke();
-    const lit = !!k.name;
-    if (lit) {
-      k.flare = Math.max(0, (k.flare || 0) - dt * .4);
-      const r = 70 + 12 * Math.sin(t * 7 + k.ph) + k.flare * 120;
-      const g = c.createRadialGradient(x, y, 3, x, y, r); g.addColorStop(0, 'rgba(255,205,110,.85)'); g.addColorStop(1, 'rgba(255,205,110,0)');
-      c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill();
-    }
-    c.fillStyle = '#b8862e'; c.beginPath(); c.moveTo(x - 10, y - 18); c.lineTo(x + 10, y - 18); c.lineTo(x + 5, y - 24); c.lineTo(x - 5, y - 24); c.fill();
-    c.fillStyle = lit ? 'rgba(255,190,90,.9)' : 'rgba(90,110,140,.35)';
-    c.beginPath(); c.moveTo(x - 10, y - 18); c.quadraticCurveTo(x - 20, y + 2, x, y + 18); c.quadraticCurveTo(x + 20, y + 2, x + 10, y - 18); c.fill();
-    c.strokeStyle = '#c9a54a'; c.lineWidth = 1.5; c.stroke();
-    if (lit) { c.fillStyle = '#fff6d0'; c.beginPath(); c.ellipse(x, y + 1 + Math.sin(t * 11 + k.ph), 3, 6 + Math.sin(t * 9 + k.ph), 0, 0, 7); c.fill(); }
-    c.fillStyle = '#b8862e'; c.beginPath(); c.arc(x, y + 20, 3, 0, 7); c.fill();
-    if (lit) {
-      c.font = '700 15px "Noto Serif"'; c.textAlign = 'center';
-      const nm = cut(k.name, 11), w = c.measureText(nm).width + 14;
-      c.fillStyle = 'rgba(20,10,0,.6)'; rr(x - w / 2, y + 28, w, 22, 9); c.fill();
-      c.fillStyle = '#ffe2a0'; c.fillText(nm, x, y + 44);
-    }
-  });
-}
-
-function drawPerson(p, t) {
-  const s = p.s, up = handsUp > 0 || standUp > 0, talking = p.talk > 0;
-  const sway = Math.sin(t * 2.3 + p.ph) * (up ? .03 : .09) * (talking ? 1.6 : 1);
-  c.save(); c.translate(p.x, p.y); c.scale(s, s);
-  c.fillStyle = 'rgba(0,0,0,.4)'; c.beginPath(); c.ellipse(0, 3, 34, 9, 0, 0, 7); c.fill();
-  if (p.nur > 0) {
-    const a = clamp(p.nur / 3, 0, 1), g = c.createRadialGradient(0, -62, 4, 0, -62, 80);
-    g.addColorStop(0, `rgba(255,232,160,${.85 * a})`); g.addColorStop(1, 'rgba(255,232,160,0)');
-    c.fillStyle = g; c.beginPath(); c.arc(0, -62, 80, 0, 7); c.fill();
-  }
-  c.rotate(sway);
-  const lift = standUp > 0 ? -18 : 0;
-  c.translate(0, lift);
-  // dizler
-  c.fillStyle = shade(p.robe, -18); c.beginPath(); c.ellipse(0, -6, 34, 11, 0, 0, 7); c.fill();
-  // gövde
-  const body = new Path2D(); body.moveTo(-28, -6); body.quadraticCurveTo(-27, -46, -13, -52); body.lineTo(13, -52); body.quadraticCurveTo(27, -46, 28, -6); body.closePath();
-  c.fillStyle = p.robe; c.fill(body);
-  const bg = c.createLinearGradient(-28, 0, 28, 0); bg.addColorStop(0, 'rgba(0,0,0,.35)'); bg.addColorStop(.55, 'rgba(255,210,140,.10)'); bg.addColorStop(1, 'rgba(0,0,0,.4)');
-  c.fillStyle = bg; c.fill(body);
-  c.strokeStyle = shade(p.robe, 30); c.lineWidth = 1.2; c.beginPath(); c.moveTo(0, -50); c.lineTo(0, -10); c.stroke();
-  // kollar / eller
-  c.lineCap = 'round';
-  if (up) {
-    c.strokeStyle = p.robe; c.lineWidth = 9;
-    c.beginPath(); c.moveTo(-15, -44); c.lineTo(-22, -66); c.moveTo(15, -44); c.lineTo(22, -66); c.stroke();
-    c.fillStyle = p.skin;
-    c.beginPath(); c.ellipse(-23, -72, 5, 7, -.25, 0, 7); c.ellipse(23, -72, 5, 7, .25, 0, 7); c.fill();
-  } else {
-    c.strokeStyle = shade(p.robe, -10); c.lineWidth = 8;
-    c.beginPath(); c.moveTo(-17, -42); c.quadraticCurveTo(-20, -24, -7, -20); c.moveTo(17, -42); c.quadraticCurveTo(20, -24, 7, -20); c.stroke();
-    c.fillStyle = p.skin; c.beginPath(); c.arc(-6, -20, 4.5, 0, 7); c.arc(6, -20, 4.5, 0, 7); c.fill();
-    const bi = Math.floor(t * 3 + p.ph * 5);
-    for (let i = 0; i < 7; i++) { c.fillStyle = i === bi % 7 ? '#e0a050' : '#5a2a10'; c.beginPath(); c.arc(-9 + i * 3, -13 + Math.abs(i - 3) * 1.2, 1.9, 0, 7); c.fill(); }
-  }
-  // baş
-  c.save(); c.translate(0, -70);
-  if (p.female) {
-    c.fillStyle = p.hijab; c.beginPath(); c.arc(0, -1, 17, Math.PI, 0); c.quadraticCurveTo(19, 14, 15, 22); c.lineTo(-15, 22); c.quadraticCurveTo(-19, 14, -17, -1); c.fill();
-    c.fillStyle = 'rgba(0,0,0,.15)'; c.beginPath(); c.arc(0, -1, 17, Math.PI * 1.1, Math.PI * 1.5); c.lineTo(0, -1); c.fill();
-  }
-  c.fillStyle = p.skin; c.beginPath(); c.ellipse(0, 2, 11.5, 13, 0, 0, 7); c.fill();
-  const fg = c.createRadialGradient(-4, -3, 2, 0, 2, 15); fg.addColorStop(0, 'rgba(255,220,170,.25)'); fg.addColorStop(1, 'rgba(0,0,0,.25)');
-  c.fillStyle = fg; c.beginPath(); c.ellipse(0, 2, 11.5, 13, 0, 0, 7); c.fill();
-  if (p.female) { c.strokeStyle = p.hijab; c.lineWidth = 3.5; c.beginPath(); c.ellipse(0, 2, 12.5, 14, 0, Math.PI * 1.05, Math.PI * 1.95); c.stroke(); }
-  // yüz
-  c.strokeStyle = '#2a1a10'; c.lineWidth = 1.4;
-  c.beginPath(); c.arc(-4.5, 1, 2.6, .25, Math.PI - .25); c.stroke(); c.beginPath(); c.arc(4.5, 1, 2.6, .25, Math.PI - .25); c.stroke();
-  c.fillStyle = 'rgba(220,110,90,.25)'; c.beginPath(); c.arc(-7, 6, 2.5, 0, 7); c.arc(7, 6, 2.5, 0, 7); c.fill();
-  if (!p.female && p.beard) { c.fillStyle = '#3a2618'; c.beginPath(); c.moveTo(-11, 3); c.quadraticCurveTo(-9, 19, 0, 20); c.quadraticCurveTo(9, 19, 11, 3); c.quadraticCurveTo(5, 11, 0, 11); c.quadraticCurveTo(-5, 11, -11, 3); c.fill(); }
-  const mo = talking ? 1 + Math.abs(Math.sin(t * 9 + p.ph)) * 2 : .8;
-  c.fillStyle = '#6a2a20'; c.beginPath(); c.ellipse(0, 8.5, 2.6, mo, 0, 0, 7); c.fill();
-  if (!p.female) {
-    if (p.sarik) {
-      c.fillStyle = '#f4f0e4'; c.beginPath(); c.ellipse(0, -9, 14.5, 8.5, 0, 0, 7); c.fill();
-      c.strokeStyle = '#c8bea6'; c.lineWidth = 1; for (let i = -1; i < 2; i++) { c.beginPath(); c.ellipse(0, -9 + i * 2.6, 13.5, 5, 0, Math.PI, 0); c.stroke(); }
-      c.fillStyle = '#7a2a2a'; c.beginPath(); c.ellipse(0, -15, 7, 4, 0, Math.PI, 0); c.fill();
-    } else { c.fillStyle = '#f7f4ec'; c.beginPath(); c.arc(0, -5, 11.5, Math.PI, 0); c.fill(); c.strokeStyle = '#cfc7b4'; c.lineWidth = 1; c.stroke(); }
-  }
-  c.restore(); c.restore();
-}
-
-function fmtSure(r) { if (r === Infinity) return '∞'; r = Math.max(0, Math.ceil(r)); if (r >= 3600) return Math.floor(r / 3600) + 'sa ' + Math.floor(r % 3600 / 60) + 'dk'; return Math.floor(r / 60) + ':' + String(r % 60).padStart(2, '0'); }
-function drawLabel(p) {
-  if (p.npc) return;
-  const y = p.y - (standUp > 0 ? 118 : 100) * p.s;
-  c.globalAlpha = p.leaving >= 0 ? clamp(1 - p.leaving / 1.2, 0, 1) : 1;
-  c.font = `700 ${p.gift ? 16 : 14}px "Noto Serif"`; c.textAlign = 'center';
-  const nm = cut(p.name, 14), r = remaining(p), low = r < UYARI_SN;
-  const tm = fmtSure(r);
-  c.font = '600 12px system-ui'; const tw = c.measureText(tm).width;
-  c.font = `700 ${p.gift ? 16 : 14}px "Noto Serif"`;
-  const w = c.measureText(nm).width + tw + 26;
-  c.fillStyle = p.gift ? 'rgba(120,80,10,.88)' : 'rgba(0,0,0,.6)'; rr(p.x - w / 2, y - 13, w, 21, 9); c.fill();
-  if (p.gift) { c.strokeStyle = '#e9c46a'; c.lineWidth = 1.2; c.stroke(); }
-  if (low && Math.sin(nowMs() / 120) > 0) { c.strokeStyle = '#ff6a5a'; c.lineWidth = 2; c.stroke(); }
-  c.textAlign = 'left'; c.fillStyle = p.gift ? '#ffe7a8' : '#fff'; c.fillText(nm, p.x - w / 2 + 8, y + 3);
-  c.font = '600 12px system-ui'; c.fillStyle = low ? '#ff8a7a' : (p.gift ? '#ffd27a' : '#9fe0a8'); c.fillText(tm, p.x + w / 2 - tw - 8, y + 2);
-  c.globalAlpha = 1;
-  p.labelY = y;
-}
-
-function drawHUD(t) {
-  c.fillStyle = 'rgba(25,14,6,.82)'; rr(24, 26, W - 48, 132, 16); c.fill();
-  c.strokeStyle = '#c9a54a'; c.lineWidth = 2.5; c.stroke(); c.strokeStyle = 'rgba(201,165,74,.4)'; c.lineWidth = 1; rr(31, 33, W - 62, 118, 12); c.stroke();
-  c.textAlign = 'center';
-  c.fillStyle = '#f4e2b0'; c.font = '700 34px "Noto Serif"'; c.fillText('Zikir Halkası', W / 2, 70);
-  c.font = '400 15px "Noto Serif"'; c.fillStyle = '#c9a54a'; c.fillText('— Kıssahanem —', W / 2, 92);
-  c.font = '700 17px "Noto Serif"'; c.fillStyle = '#fff';
-  c.fillText(`❤ ${BEGENI_GIRIS} beğeni → halkaya otur  •  SUBHANALLAH yaz`, W / 2, 118);
-  c.font = '400 15px "Noto Serif"'; c.fillStyle = '#ffe2a0';
-  c.fillText('🎁 Hediye → halkada daha uzun kal + adına dua edilsin', W / 2, 142);
-}
-
-function drawBottom(t) {
-  const goal = GOALS[Math.min(goalIdx, GOALS.length - 1)];
-  const prev = goalIdx > 0 ? GOALS[goalIdx - 1] : 0;
-  const k = clamp((count - prev) / (goal - prev), 0, 1);
-  const y = H - 178;
-  c.fillStyle = 'rgba(10,6,20,.75)'; rr(30, y, W - 60, 74, 14); c.fill();
-  c.textAlign = 'center'; c.fillStyle = '#fff'; c.font = '700 21px "Noto Serif"';
-  c.fillText(`${count.toLocaleString('tr-TR')} zikir  •  hedef ${goal.toLocaleString('tr-TR')}`, W / 2, y + 30);
-  c.fillStyle = 'rgba(255,255,255,.1)'; rr(50, y + 44, W - 100, 16, 8); c.fill();
-  const g = c.createLinearGradient(50, 0, W - 50, 0); g.addColorStop(0, '#b8862e'); g.addColorStop(1, '#ffe7a8');
-  c.fillStyle = g; rr(50, y + 44, Math.max(16, (W - 100) * k), 16, 8); c.fill();
-  // dua listesi
-  const top = Object.values(totals).sort((a, b) => b.coins - a.coins).slice(0, 3);
-  const y2 = H - 94;
-  c.fillStyle = 'rgba(10,6,20,.75)'; rr(30, y2, W - 60, 64, 14); c.fill();
-  const inRing = people.filter(p => !p.npc && p.leaving < 0).length;
-  const page = Math.floor(t / 7) % 3;
-  if (page === 0) {
-    if (sultan) { c.fillStyle = '#ffe7a8'; c.font = '700 17px "Noto Serif"'; c.fillText(`👑 Halkanın Sultanı: ${cut(sultan, 18)}`, W / 2, y2 + 24); }
-    else { c.fillStyle = '#c9a54a'; c.font = '700 16px "Noto Serif"'; c.fillText(`🤲 Dua listesi  •  halkada ${inRing} kişi`, W / 2, y2 + 24); }
-    c.font = '400 16px "Noto Serif"'; c.fillStyle = '#fff';
-    c.fillText(top.length ? top.map((p, i) => `${i + 1}. ${cut(p.name, 12)}`).join('    ') : 'İlk hediyeyi gönderenin adı burada', W / 2, y2 + 48);
-  } else if (page === 1) {
-    c.fillStyle = '#c9a54a'; c.font = '700 16px "Noto Serif"'; c.fillText('⏳ Halkada kalma süresi', W / 2, y2 + 24);
-    c.font = '400 15px "Noto Serif"'; c.fillStyle = '#fff';
-    c.fillText('🌹1 jeton 3 dk • 10 jeton 10 dk • 100 jeton 30 dk • 500 jeton 1 saat', W / 2, y2 + 48);
-  } else {
-    c.fillStyle = '#c9a54a'; c.font = '700 16px "Noto Serif"'; c.fillText('✨ Büyük hediyeler', W / 2, y2 + 24);
-    c.font = '400 15px "Noto Serif"'; c.fillStyle = '#fff';
-    c.fillText(`1000 jeton 3 saat • 5000 jeton yayın sonuna kadar • ❤ ${BEGENI_GIRIS} beğeni +1 dk`, W / 2, y2 + 48);
-  }
-}
-
-function drawToasts(dt) {
-  toasts = toasts.filter(x => x.t < 4.5);
-  toasts.forEach((x, i) => {
-    x.t += dt; const a = clamp(Math.min(x.t * 4, (4.5 - x.t) * 2), 0, 1);
-    c.globalAlpha = a; c.font = '700 17px "Noto Serif"'; c.textAlign = 'left';
-    const w = Math.min(W - 60, c.measureText(x.txt).width + 24), y = H - 222 - i * 40, xx = 30 - (1 - a) * 40;
-    c.fillStyle = 'rgba(70,40,8,.88)'; rr(xx, y - 22, w, 32, 12); c.fill(); c.strokeStyle = '#c9a54a'; c.lineWidth = 1; c.stroke();
-    c.fillStyle = '#ffe7a8'; c.fillText(x.txt, xx + 12, y);
-    c.globalAlpha = 1;
-  });
-}
-
-function drawDua(dt) {
-  if (!dua && duaQ.length) { dua = duaQ.shift(); if (duaQ.length > 3) dua.dur *= .6; if (dua.kind === 'dua') handsUp = Math.max(handsUp, dua.dur); }
-  if (!dua) return;
-  dua.t += dt;
-  const a = clamp(Math.min(dua.t * 2.5, (dua.dur - dua.t) * 2), 0, 1);
-  if (dua.t >= dua.dur) { dua = null; return; }
-  const big = dua.lvl >= 5;
-  if (big || dua.kind === 'ayet') { c.fillStyle = `rgba(2,3,12,${(big ? .55 : .35) * a})`; c.fillRect(0, 0, W, H); }
-  c.globalAlpha = a;
-  const pad = 34, x = 40, w = W - 80, sc = .92 + .08 * a;
-  c.save(); c.translate(W / 2, 0); c.scale(sc, sc); c.translate(-W / 2, 0);
-  c.textAlign = 'center';
-  let lines, nameSize = big ? 54 : 44, txtSize = big ? 27 : 25;
-  c.font = `400 ${txtSize}px "Noto Serif"`;
-  lines = wrap(dua.text, w - pad * 2);
-  const h = dua.kind === 'ayet' ? 110 + lines.length * 38 : 150 + lines.length * (txtSize + 12) + (big ? 40 : 0);
-  const y = (big ? H * .4 : H * .345) - h / 2;
-  const g = c.createLinearGradient(0, y, 0, y + h); g.addColorStop(0, '#141a42'); g.addColorStop(1, '#2a1238');
-  c.shadowColor = 'rgba(255,200,100,.6)'; c.shadowBlur = 30; c.fillStyle = g; rr(x, y, w, h, 22); c.fill(); c.shadowBlur = 0;
-  c.strokeStyle = '#e9c46a'; c.lineWidth = 3; c.stroke(); c.strokeStyle = 'rgba(233,196,106,.45)'; c.lineWidth = 1.2; rr(x + 9, y + 9, w - 18, h - 18, 16); c.stroke();
-  [[x + 9, y + 9], [x + w - 9, y + 9], [x + 9, y + h - 9], [x + w - 9, y + h - 9]].forEach(([cx, cy]) => { c.fillStyle = '#e9c46a'; c.save(); c.translate(cx, cy); c.rotate(Math.PI / 4); c.fillRect(-5, -5, 10, 10); c.restore(); });
-  if (dua.kind === 'ayet') {
-    c.fillStyle = '#c9a54a'; c.font = '700 17px "Noto Serif"';
-    c.fillText(dua.goal ? `✨ ${dua.goal.toLocaleString('tr-TR')} zikre ulaşıldı ✨` : '✨ Ayet-i Kerime ✨', W / 2, y + 40);
-    c.fillStyle = '#fff'; c.font = '400 27px "Noto Serif"'; lines.forEach((l, i) => c.fillText(l, W / 2, y + 82 + i * 38));
-    c.fillStyle = '#e9c46a'; c.font = '700 17px "Noto Serif"'; c.fillText(`(${dua.ref})`, W / 2, y + 82 + lines.length * 38);
-  } else {
-    c.fillStyle = '#c9a54a'; c.font = '700 18px "Noto Serif"';
-    c.fillText(`🤲  ${cut(dua.gift, 18)} • ${dua.coins.toLocaleString('tr-TR')} jeton`, W / 2, y + 42);
-    drawAvatar(dua.avatar, dua.name, x + 52, y + 52, 30);
-    c.textAlign = 'center';
-    if (dua.etiket) { c.font = '700 15px system-ui'; c.fillStyle = '#9fe0a8'; c.fillText('⏳ ' + dua.etiket, x + w - 70, y + 42); }
-    c.font = `700 ${nameSize}px "Noto Serif"`; c.fillStyle = '#ffe7a8'; c.shadowColor = '#ffb84a'; c.shadowBlur = 22;
-    c.fillText(cut(dua.name, 16), W / 2, y + 52 + nameSize); c.shadowBlur = 0;
-    c.fillStyle = '#fff'; c.font = `400 ${txtSize}px "Noto Serif"`;
-    lines.forEach((l, i) => c.fillText(l, W / 2, y + 90 + nameSize + i * (txtSize + 12)));
-    if (big) { c.fillStyle = '#e9c46a'; c.font = '700 30px "Noto Serif"'; c.fillText('Âmin', W / 2, y + h - 30); }
-  }
-  c.restore(); c.globalAlpha = 1;
-}
-
-function drawParticles(dt) {
-  petals = petals.filter(p => p.y < H + 20);
-  petals.forEach(p => { p.y += p.v * 60 * dt; p.a += dt * 2; c.fillStyle = '#e0607e'; c.beginPath(); c.ellipse(p.x + Math.sin(p.a) * 14, p.y, 7 * p.s, 4 * p.s, p.a, 0, 7); c.fill(); });
-  nurRain = nurRain.filter(p => p.y < H + 10);
-  nurRain.forEach(p => { p.y += p.v * 60 * dt; const g = c.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 4); g.addColorStop(0, 'rgba(255,240,190,.95)'); g.addColorStop(1, 'rgba(255,240,190,0)'); c.fillStyle = g; c.beginPath(); c.arc(p.x, p.y, p.r * 4, 0, 7); c.fill(); });
-  if (nurFlash > 0) { const g = c.createRadialGradient(W / 2, H * .6, 10, W / 2, H * .6, W * .9); g.addColorStop(0, `rgba(255,236,170,${nurFlash * .6})`); g.addColorStop(1, 'rgba(255,236,170,0)'); c.fillStyle = g; c.fillRect(0, 0, W, H); nurFlash = Math.max(0, nurFlash - dt * .45); }
-}
-
-function drawStatus(dt) {
-  if (connT <= 0) return; connT -= dt;
-  c.globalAlpha = clamp(connT, 0, 1); c.font = '600 14px system-ui'; c.textAlign = 'center';
-  const w = c.measureText(connStatus).width + 20; c.fillStyle = 'rgba(0,0,0,.7)'; rr(W / 2 - w / 2, 166, w, 24, 10); c.fill();
-  c.fillStyle = '#9fe0a8'; c.fillText(connStatus, W / 2, 183); c.globalAlpha = 1;
-}
-
-// ================== DÖNGÜ ==================
-let last = performance.now();
-function frame(now) {
-  const dt = Math.min(.05, (now - last) / 1000); last = now; const t = now / 1000;
-  handsUp = Math.max(0, handsUp - dt); skyOpen = Math.max(0, skyOpen - dt); standUp = Math.max(0, standUp - dt);
-  updateSeats(dt);
-  drawSky(t, dt);
-  const cx = W / 2, cy = H * .675, rx = W * .215, ry = H * .058;
-  drawCarpet(cx, cy, rx, ry, t);
-  drawKandils(t, dt);
-  // halka yerleşimi
-  const order = people.filter(p => p.leaving < 0).sort((a, b) => (a.npc - b.npc) || (b.gift - a.gift) || (a.seq - b.seq));
-  people.forEach(p => { if (p.leaving >= 0) { p.y += dt * 140; p.s *= (1 - dt * .3); } });
-  const RINGS = [{ n: 10, r: 1.25 }, { n: 14, r: 1.62 }, { n: 18, r: 1.98 }];
-  let idx = 0;
-  RINGS.forEach((R, ri) => {
-    const list = order.slice(idx, idx + R.n); idx += R.n;
-    list.forEach((p, k) => {
-      const ang = (k / list.length) * Math.PI * 2 + ri * .22 + t * .035;
-      const tx = cx + Math.cos(ang) * rx * R.r, ty = cy + Math.sin(ang) * ry * R.r;
-      const ts = 1.15 + Math.sin(ang) * .17 + ri * .06;
-      p.x += (tx - p.x) * Math.min(1, dt * 2.5); p.y += (ty - p.y) * Math.min(1, dt * 2.5); p.s += (ts - p.s) * Math.min(1, dt * 3);
-      p.nur = Math.max(0, p.nur - dt * .35); p.talk = Math.max(0, p.talk - dt);
-    });
-  });
-  // tesbih arkası / önü için derinlik
-  const sorted = people.slice().sort((a, b) => a.y - b.y);
-  const back = sorted.filter(p => p.y < cy), front = sorted.filter(p => p.y >= cy);
-  const dp = p => { if (p.leaving >= 0) { c.globalAlpha = clamp(1 - p.leaving / 1.4, 0, 1); drawPerson(p, t); c.globalAlpha = 1; } else drawPerson(p, t); };
-  back.forEach(dp);
-  drawTesbih(cx, cy, rx, ry, dt);
-  front.forEach(dp);
-  sorted.forEach(drawLabel);
-  floats = floats.filter(f => f.t < 2.2);
-  floats.forEach(f => { f.t += dt; const a = 1 - f.t / 2.2, y = (f.p.labelY || cy) - 18 - f.t * 46;
-    c.globalAlpha = a; c.font = '700 21px "Noto Serif"'; c.textAlign = 'center'; c.lineWidth = 4; c.strokeStyle = 'rgba(0,0,0,.6)';
-    c.strokeText(f.txt, f.p.x, y); c.fillStyle = '#ffe7a8'; c.fillText(f.txt, f.p.x, y); c.globalAlpha = 1; });
-  drawParticles(dt);
-  drawHUD(t);
-  drawWelcome(dt);
-  drawStatus(dt);
-  drawBottom(t);
-  drawToasts(dt);
-  if (!dua) drawDuaSub(dt);
-  drawDua(dt);
-  requestAnimationFrame(frame);
-}
-
-// ================== SES (kodla üretilir) ==================
-let AC = null, master = null, musicBus = null;
-const sfx = { zikir() {}, gift() {} };
-function audioInit() {
-  AC = new (window.AudioContext || window.webkitAudioContext)();
-  master = AC.createGain(); master.gain.value = .9; master.connect(AC.destination);
-  const rev = AC.createConvolver(), len = AC.sampleRate * 3.5, buf = AC.createBuffer(2, len, AC.sampleRate);
-  for (let ch = 0; ch < 2; ch++) { const d = buf.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); }
-  rev.buffer = buf; const wet = AC.createGain(); wet.gain.value = .55; rev.connect(wet); wet.connect(master);
-  musicBus = AC.createGain(); musicBus.gain.value = .55; musicBus.connect(master); musicBus.connect(rev);
-  const fxBus = AC.createGain(); fxBus.gain.value = .7; fxBus.connect(master); fxBus.connect(rev);
-  // drone
-  [73.42, 146.83, 220].forEach((f, i) => { const o = AC.createOscillator(), g = AC.createGain(), l = AC.createOscillator(), lg = AC.createGain();
-    o.type = i ? 'sine' : 'triangle'; o.frequency.value = f; g.gain.value = i ? .05 : .07; l.frequency.value = .07 + i * .03; lg.gain.value = .02; l.connect(lg); lg.connect(g.gain);
-    o.connect(g); g.connect(musicBus); o.start(); l.start(); });
-  const MAKAMLAR = [
-    [293.66, 311.13, 369.99, 392, 440, 466.16, 523.25, 587.33],   // Hicaz (Re)
-    [293.66, 324.0, 349.23, 392, 440, 466.16, 523.25, 587.33],    // Uşşak (Re)
-    [196, 220, 243.0, 261.63, 293.66, 329.63, 362.0, 392].map(f => f * 1.5), // Rast
-  ];
-  let SC = MAKAMLAR[0];
-  const PHR = [[0,1,2,1,0,-1,3,2],[1,2,4,3,2,1,0,-1],[4,5,4,3,2,1,2,0],[2,3,4,5,6,5,4,-1],[4,3,2,1,2,1,0,-1]];
-  function ney(f, t, d, v = .16) {
-    const o = AC.createOscillator(), o2 = AC.createOscillator(), g = AC.createGain(), g2 = AC.createGain(), lfo = AC.createOscillator(), lg = AC.createGain();
-    const n = AC.createBufferSource(), nf = AC.createBiquadFilter(), ng = AC.createGain();
-    o.type = 'triangle'; o2.type = 'sine'; o.frequency.value = f; o2.frequency.value = f * 2; g2.gain.value = .25;
-    lfo.frequency.value = 5.2; lg.gain.value = f * .009; lfo.connect(lg); lg.connect(o.frequency);
-    const nb = AC.createBuffer(1, Math.ceil(AC.sampleRate * d), AC.sampleRate), nd = nb.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
-    n.buffer = nb; nf.type = 'bandpass'; nf.frequency.value = f * 2; nf.Q.value = 2.5; ng.gain.value = .05;
-    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .3); g.gain.setValueAtTime(v, t + d - .35); g.gain.linearRampToValueAtTime(0, t + d);
-    o.connect(g); o2.connect(g2); g2.connect(g); n.connect(nf); nf.connect(ng); ng.connect(g); g.connect(musicBus);
-    [o, o2, lfo, n].forEach(x => { x.start(t); x.stop(t + d + .05); });
-  }
-  function def(t, k) { const o = AC.createOscillator(), g = AC.createGain(); o.frequency.setValueAtTime(k ? 190 : 85, t); o.frequency.exponentialRampToValueAtTime(48, t + .16);
-    g.gain.setValueAtTime(k ? .07 : .2, t); g.gain.exponentialRampToValueAtTime(.001, t + .28); o.connect(g); g.connect(musicBus); o.start(t); o.stop(t + .3); }
-  let t0 = AC.currentTime + .4, ph = 0;
-  (function loop() {
-    if (ph % 5 === 0) SC = MAKAMLAR[Math.floor(ph / 5) % MAKAMLAR.length];
-    let t = t0; const phr = PHR[ph++ % PHR.length];
-    phr.forEach((s, i) => { const d = i === phr.length - 1 ? 2.4 : 1.1; if (s >= 0) ney(SC[s], t, d); t += d; });
-    for (let b = t0; b < t; b += 2.2) { def(b, 0); def(b + 1.1, 1); def(b + 1.65, 1); }
-    t += 1.2; t0 = t; setTimeout(loop, (t - AC.currentTime - .8) * 1000);
-  })();
-  const PENTA = [587.33, 659.25, 739.99, 880, 987.77, 1174.66];
-  function bell(f, t, v, d = 2.2) { const o = AC.createOscillator(), o2 = AC.createOscillator(), g = AC.createGain();
-    o.type = 'sine'; o2.type = 'sine'; o.frequency.value = f; o2.frequency.value = f * 2.76;
-    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .01); g.gain.exponentialRampToValueAtTime(.0008, t + d);
-    const g2 = AC.createGain(); g2.gain.value = .3; o.connect(g); o2.connect(g2); g2.connect(g); g.connect(fxBus); o.start(t); o2.start(t); o.stop(t + d); o2.stop(t + d); }
-  function pad(freqs, t, d, v) { freqs.forEach(f => { [-4, 4].forEach(dt => { const o = AC.createOscillator(), fl = AC.createBiquadFilter(), g = AC.createGain();
-    o.type = 'sawtooth'; o.frequency.value = f; o.detune.value = dt; fl.type = 'lowpass'; fl.frequency.value = 1200;
-    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + 1.2); g.gain.setValueAtTime(v, t + d - 1.5); g.gain.linearRampToValueAtTime(0, t + d);
-    o.connect(fl); fl.connect(g); g.connect(fxBus); o.start(t); o.stop(t + d); }); }); }
-  let lastZ = 0;
-  sfx.zikir = () => { const t = AC.currentTime; if (t - lastZ < .12) return; lastZ = t; bell(rnd(PENTA), t, .05, 1.4); };
-  sfx.gift = (lvl) => { const t = AC.currentTime;
-    const n = Math.min(2 + lvl * 2, 12); for (let i = 0; i < n; i++) bell(PENTA[i % PENTA.length] * (i >= 6 ? 2 : 1) / (lvl >= 4 ? 2 : 1), t + i * .09, .09 + lvl * .015);
-    if (lvl >= 3) pad([146.83, 220, 293.66, 369.99], t, 3 + lvl, .012 + lvl * .004);
-    if (lvl >= 5) pad([73.42, 110, 146.83], t + .5, 8, .03);
-    if (lvl >= 2) { try { voice.hediye(); } catch (_) {} } };
-  voice.init();
-}
-
-// ================== SESLİ DUALAR (telifsiz, Kıssahanem için üretildi) ==================
-const DUA_YAZI = [
-  'Allah\'ım, bu halkada seni ananları affet. Kalplerimizi zikrinle huzura kavuştur. Âmin.',
-  'Rabbimiz, bize dünyada da iyilik ver, ahirette de iyilik ver. Bizi ateş azabından koru. Âmin.',
-  'Allah\'ım, duasıyla, hediyesiyle bu halkaya katılan herkesten razı ol. Evlerine bereket, gönüllerine huzur ver. Âmin.',
-  'Rabbim, hastalarımıza şifa, dertlilerimize deva, borçlularımıza eda nasip eyle. Âmin.',
-  'Allah\'ım, anne babalarımızı, sevdiklerimizi ve ahirete göçmüş bütün müminleri rahmetinle kucakla. Âmin.',
-];
-let duaSub = null;
-const voice = {
-  dualar: [], hediyeSes: [], busy: false, idx: 0, hidx: 0, lastH: 0, bus: null,
-  async init() {
-    if (!window.SESLER) return;
-    this.bus = AC.createGain(); this.bus.gain.value = 1.15; this.bus.connect(master);
-    const dec = async (u) => { const b = atob(u.split(',')[1]); const a = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) a[i] = b.charCodeAt(i); return await AC.decodeAudioData(a.buffer); };
-    try {
-      this.dualar = await Promise.all(SESLER.dualar.map(dec));
-      this.hediyeSes = await Promise.all(SESLER.hediye.map(dec));
-    } catch (e) { console.log('ses yüklenemedi', e); return; }
-    setTimeout(() => this.duaOku(), 20000);
-    setInterval(() => this.duaOku(), 75000);
-  },
-  play(buf, onEnd) {
-    if (!buf || this.busy) return false;
-    this.busy = true;
-    const t = AC.currentTime;
-    musicBus.gain.cancelScheduledValues(t); musicBus.gain.setTargetAtTime(.16, t, .3);
-    const src = AC.createBufferSource(); src.buffer = buf; src.connect(this.bus); src.start(t + .3);
-    src.onended = () => { this.busy = false; musicBus.gain.setTargetAtTime(.55, AC.currentTime, .8); onEnd && onEnd(); };
-    return true;
-  },
-  duaOku() {
-    if (!this.dualar.length) return;
-    const i = this.idx % this.dualar.length;
-    if (this.play(this.dualar[i], () => { duaSub = null; })) { this.idx++; duaSub = { txt: DUA_YAZI[i], t: 0 }; handsUp = Math.max(handsUp, this.dualar[i].duration + .5); }
-  },
-  hediye() {
-    if (!this.hediyeSes.length || AC.currentTime - this.lastH < 6) return;
-    if (this.play(this.hediyeSes[this.hidx % this.hediyeSes.length])) { this.hidx++; this.lastH = AC.currentTime; }
-  },
-};
-
-function drawDuaSub(dt) {
-  if (!duaSub) return; duaSub.t += dt;
-  const a = clamp(duaSub.t * 2, 0, 1);
-  c.globalAlpha = a; c.font = 'italic 400 21px "Noto Serif"'; c.textAlign = 'center';
-  const lines = wrap(duaSub.txt, W - 120), h = 44 + lines.length * 28, y = H * .45 - h;
-  c.fillStyle = 'rgba(8,6,24,.78)'; rr(40, y, W - 80, h, 16); c.fill(); c.strokeStyle = 'rgba(233,196,106,.6)'; c.lineWidth = 1.2; c.stroke();
-  c.fillStyle = '#c9a54a'; c.font = '700 15px "Noto Serif"'; c.fillText('🤲 Halkanın duası', W / 2, y + 24);
-  c.fillStyle = '#fff'; c.font = 'italic 400 21px "Noto Serif"'; lines.forEach((l, i) => c.fillText(l, W / 2, y + 52 + i * 28));
-  c.globalAlpha = 1;
-}
-
-// ================== BAĞLANTI ==================
-function connect() {
-  const ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
-  ws.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (_) { return; }
-    if (m.type === 'chat') onChat(m.id, m.name, m.text, m.avatar);
-    else if (m.type === 'gift') onGift(m.id, m.name, m.coins, m.gift, m.avatar);
-    else if (m.type === 'like') onLike(m.id, m.name, m.count, m.avatar);
-    else if (m.type === 'join') onJoin(m.id, m.name, m.avatar);
-    else if (m.type === 'follow') onFollow(m.id, m.name);
-    else if (m.type === 'status') { connStatus = m.text; connT = 8; } };
-  ws.onclose = () => { connStatus = 'Sunucu bağlantısı koptu, yeniden bağlanıyor…'; connT = 5; setTimeout(connect, 3000); };
-}
-
-// ================== TEST / DEMO ==================
-const FAKE = ['hümeyra', 'ahmethan', 'Sena', 'Nur', 'ömer', 'efeberk0', 'Betül', 'Yusuf_34', 'zeynep.k', 'Mustafa', 'Elif', 'haticee', 'burak21', 'Esma', 'kerem', 'Rabia', 'Selim', 'ayşe_nur', 'hamza', 'Meryem', 'Abdullah', 'Kübra', 'Emre_63', 'fatma.', 'Zehra'];
-const GIFTNAMES = { 1: 'Gül', 10: 'Parmak Kalp', 100: 'El Kalp', 500: 'Hilal', 1000: 'Galaksi', 5000: 'Aslan' };
-const ZW = ['SUBHANALLAH', 'Elhamdülillah', 'allahuekber', 'Lâ ilâhe illallah', 'estağfirullah', 'Maşallah', 'amin'];
-function fake() { const n = rnd(FAKE); return [n.toLowerCase(), n]; }
-let demo = false, demoT = 0;
-function demoTick(dt) {
-  if (!demo) return; demoT -= dt; if (demoT > 0) return; demoT = .35 + Math.random() * .8;
-  const r = Math.random(), [id, nm] = fake();
-  if (r < .18) onJoin(id, nm);
-  else if (r < .55) onChat(id, nm, rnd(ZW));
-  else if (r < .8) onLike(id, nm, 25 + Math.floor(Math.random() * 50));
-  else if (r < .92) onGift(id, nm, 1, 'Gül');
-  else if (r < .975) onGift(id, nm, 10, 'Parmak Kalp');
-  else if (r < .993) onGift(id, nm, 100, 'El Kalp');
-  else onGift(id, nm, 500, 'Hilal');
-}
-setInterval(() => demoTick(.1), 100);
-const testEl = document.getElementById('test');
-testEl.addEventListener('click', e => {
-  const b = e.target.closest('button'); if (!b) return;
-  const [id, nm] = fake();
-  if (b.dataset.c) onGift(id, nm, +b.dataset.c, GIFTNAMES[b.dataset.c]);
-  else if (b.dataset.a === 'zikir') onChat(id, nm, rnd(ZW));
-  else if (b.dataset.a === 'like') onLike(id, nm, 100);
-  else if (b.dataset.a === 'join') onJoin(id, nm);
-  else if (b.dataset.a === 'dua') { if (AC) voice.duaOku(); }
-  else if (b.dataset.a === 'demo') { demo = !demo; b.classList.toggle('on', demo); }
-  else if (b.dataset.a === 'hide') testEl.style.display = 'none';
-});
-
-// ================== BAŞLAT ==================
-document.getElementById('startInfo').textContent = LIVE
-  ? 'Başlat\'a bas, sonra TikTok\'ta ekran paylaşımıyla canlı yayını aç. Sesin gelmesi için bu dokunuş gerekli.'
-  : 'Önizleme: Başlat\'a bas. Aşağıdaki butonlarla zikir ve farklı jeton miktarlarını deneyebilirsin. Otomatik demo açık başlar.';
-if (!LIVE) for (let i = 0; i < 8; i++) { const [id, nm] = fake(); sitOrExtend(id, nm, '', 60 + Math.random() * 120); }
-toasts.length = 0;
-document.getElementById('go').onclick = () => {
-  document.getElementById('start').style.display = 'none';
-  try { audioInit(); } catch (_) {}
-  try { document.documentElement.requestFullscreen && document.documentElement.requestFullscreen().catch(() => {}); } catch (_) {}
-  if (LIVE) connect();
-  if (!LIVE || PARAMS.has('test')) { testEl.style.display = 'flex'; if (!LIVE) { demo = true; document.getElementById('demoBtn').classList.add('on'); } }
-};
-requestAnimationFrame(frame);
-</script>
+<script type="module" src="oyun.js"></script>
 </body>
 </html>
