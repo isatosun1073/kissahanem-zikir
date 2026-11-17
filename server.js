@@ -38,7 +38,12 @@ const send = (o) => { const s = JSON.stringify(o); wss.clients.forEach(c => c.re
 const status = (t) => { lastStatus = t; console.log(new Date().toISOString(), t); send({ type: 'status', text: t }); };
 wss.on('connection', ws => ws.send(JSON.stringify({ type: 'status', text: lastStatus })));
 
-const who = (d) => ({ id: d.user?.uniqueId || 'anon', name: d.user?.nickname || d.user?.uniqueId || 'Misafir' });
+const avatar = (u) => {
+  const p = u?.profilePicture || {};
+  const list = p.urls || p.url || p.urlList || [];
+  return (Array.isArray(list) ? list.find(x => /\.(jpe?g|webp|png)/i.test(x)) || list[0] : list) || u?.profilePictureUrl || '';
+};
+const who = (d) => ({ id: d.user?.uniqueId || 'anon', name: d.user?.nickname || d.user?.uniqueId || 'Misafir', avatar: avatar(d.user) });
 
 let conn = null, retry = null;
 function start() {
@@ -56,6 +61,7 @@ function start() {
   });
 
   conn.on(WebcastEvent.LIKE, d => send({ type: 'like', ...who(d), count: d.likeCount || 1 }));
+  conn.on(WebcastEvent.MEMBER, d => send({ type: 'join', ...who(d) }));
   conn.on(WebcastEvent.FOLLOW, d => send({ type: 'follow', ...who(d) }));
   conn.on(WebcastEvent.STREAM_END, () => { status('Yayın bitti, yeni yayın bekleniyor…'); schedule(); });
   conn.on(ControlEvent.DISCONNECTED, () => { status('Bağlantı koptu, tekrar deneniyor…'); schedule(); });
